@@ -8,16 +8,57 @@ function Square (props) {
 }
 
 function Board() {
+  const [xIsNext, setXIsNext] = useState(true);
   const [squares, setSquares] = useState(Array(9).fill("_"));
-  
+  let winner;
+  let status;
+
+  if (winner) {
+    status = 'Winner: ' + winner;
+  } else {
+    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+  }
+
+  function game_Win() {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] !== "_" && squares[b] !== "_" && squares[c] !== "_") {
+        if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+          status = squares[a];
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   function handleClick(i) {
+    if (squares[i] !== "_" || game_Win()) {
+      return;
+    }
     const remainingSquares = squares.slice();
-    remainingSquares[i] = "X";
+    if (xIsNext) {
+      remainingSquares[i] = "X";
+    } else {
+      remainingSquares[i] = "O";
+    }
     setSquares(remainingSquares);
+    setXIsNext(!xIsNext);
   }  
 
   return (
     <>
+      <div className="status">{status}</div>
       <div className="board-row">
         <Square input={squares[0]} onSquareClick={() => handleClick(0)}></Square>
         <Square input={squares[1]} onSquareClick={() => handleClick(1)}></Square>
