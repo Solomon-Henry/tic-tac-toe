@@ -1,23 +1,22 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-
+import Reset from './Reset';
 function Square (props) {
   const [value, setValue] = useState(props.input);
   return <button className='square' onClick={props.onSquareClick}>{props.input}</button>
 }
 
 function Board() {
-  const [xIsNext, setXIsNext] = useState(true);
+  const [symbol, setSymbol] = useState("X");
   const [squares, setSquares] = useState(Array(9).fill("_"));
-  let winner;
-  let status;
-
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
-  }
+  const [winner, setWinner] = useState(null);
+  const[status, setStatus] = useState('Next player' + 'X');
+  const [toReset, setReset] = useState(false);
+  const [resetBtn, setResetBtn] = useState(null);
+  useEffect(() => {game_Win()},[squares]);
+  useEffect(() => {setStatus(winner ? 'Winner is ' + symbol :  'Next player ' + symbol)}, [symbol,winner]);
+  useEffect(() => {renderResetBtn()},[toReset]);
 
   function game_Win() {
     const lines = [
@@ -32,33 +31,60 @@ function Board() {
     ];
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
+      
       if (squares[a] !== "_" && squares[b] !== "_" && squares[c] !== "_") {
-        if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-          status = squares[a];
+        if (squares[a] === squares[b] && squares[a] === squares[c]) {
+          if(symbol !== "O") {
+            setSymbol("O");
+          } else {
+            setSymbol("X");
+          }
+          setWinner(symbol);
+          setReset(true);
           return true;
         }
       }
     }
     return false;
   }
-
+  
   function handleClick(i) {
-    if (squares[i] !== "_" || game_Win()) {
+    if (squares[i] !== "_" || winner) {
       return;
     }
     const remainingSquares = squares.slice();
-    if (xIsNext) {
-      remainingSquares[i] = "X";
-    } else {
-      remainingSquares[i] = "O";
-    }
+    remainingSquares[i] = symbol;
+    
     setSquares(remainingSquares);
-    setXIsNext(!xIsNext);
-  }  
-
+    
+    if(symbol !== "O") {
+      setSymbol("O");
+    } else {
+      setSymbol("X");
+    }
+  
+  } 
+  function reset() {
+    setSymbol("X");
+    setSquares(Array(9).fill("_"));
+    setWinner(null);
+    setStatus('Next player' + 'X');
+    setReset(false);
+    setResetBtn(null);
+  }
+  function renderResetBtn() {
+    if(toReset) {
+     setResetBtn(<Reset func={() => reset()}/>);
+    }
+  }
   return (
     <>
-      <div className="status">{status}</div>
+      <div className="status">
+        {status}
+      </div>
+      <div>
+        {resetBtn}
+      </div>
       <div className="board-row">
         <Square input={squares[0]} onSquareClick={() => handleClick(0)}></Square>
         <Square input={squares[1]} onSquareClick={() => handleClick(1)}></Square>
